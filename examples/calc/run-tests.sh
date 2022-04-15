@@ -7,7 +7,7 @@ function fatal() {
     exit 1
 }
 
-go install github.com/dlespiau/covertool
+# go install github.com/coocoozz/covertool
 
 echo "• Build the coverage-instrumented version of calc"
 go test -o calc -covermode count &> /dev/null

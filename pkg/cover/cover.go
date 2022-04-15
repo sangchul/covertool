@@ -18,8 +18,10 @@ import (
 	"flag"
 	"io"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 // ParseAndStriptestFlags runs flag.Parse to parse the standard flags of a test
@@ -52,6 +54,39 @@ func (f dummyTestDeps) StopTestLog() error                          { return nil
 func (d dummyTestDeps) WriteHeapProfile(io.Writer) error            { return nil }
 func (d dummyTestDeps) WriteProfileTo(string, io.Writer, int) error { return nil }
 func (f dummyTestDeps) ImportPath() string                          { return "" }
+func (f dummyTestDeps) SetPanicOnExit0(bool)                        {}
+func (f dummyTestDeps) CoordinateFuzzing(time.Duration, int64, time.Duration, int64, int, []CorpusEntry, []reflect.Type, string, string) error {
+	return nil
+}
+func (f dummyTestDeps) RunFuzzWorker(func(CorpusEntry) error) error { return nil }
+func (f dummyTestDeps) ReadCorpus(string, []reflect.Type) ([]CorpusEntry, error) {
+	return nil, nil
+}
+func (f dummyTestDeps) CheckCorpus([]any, []reflect.Type) error { return nil }
+func (f dummyTestDeps) ResetCoverage()                          {}
+func (f dummyTestDeps) SnapshotCoverage()                       {}
+
+type CorpusEntry = struct {
+	Parent string
+
+	// Path is the path of the corpus file, if the entry was loaded from disk.
+	// For other entries, including seed values provided by f.Add, Path is the
+	// name of the test, e.g. seed#0 or its hash.
+	Path string
+
+	// Data is the raw input data. Data should only be populated for seed
+	// values. For on-disk corpus files, Data will be nil, as it will be loaded
+	// from disk using Path.
+	Data []byte
+
+	// Values is the unmarshaled values from a corpus file.
+	Values []any
+
+	Generation int
+
+	// IsSeed indicates whether this entry is part of the seed corpus.
+	IsSeed bool
+}
 
 // FlushProfiles flushes test profiles to disk. It works by build and executing
 // a dummy list of 1 test. This is to ensure we execute the M.after() function
@@ -72,8 +107,9 @@ func FlushProfiles() {
 	tests := []testing.InternalTest{}
 	benchmarks := []testing.InternalBenchmark{}
 	examples := []testing.InternalExample{}
+	fuzzTargets := []testing.InternalFuzzTarget{}
 	var f dummyTestDeps
-	dummyM := testing.MainStart(f, tests, benchmarks, examples)
+	dummyM := testing.MainStart(f, tests, benchmarks, fuzzTargets, examples)
 	dummyM.Run()
 
 	// restore stdout/err
