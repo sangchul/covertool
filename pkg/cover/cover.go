@@ -65,6 +65,9 @@ func (f dummyTestDeps) ReadCorpus(string, []reflect.Type) ([]CorpusEntry, error)
 func (f dummyTestDeps) CheckCorpus([]any, []reflect.Type) error { return nil }
 func (f dummyTestDeps) ResetCoverage()                          {}
 func (f dummyTestDeps) SnapshotCoverage()                       {}
+func (f dummyTestDeps) InitRuntimeCoverage() (mode string, tearDown func(coverprofile string, gocoverdir string) (string, error), snapcov func() float64) {
+	return "", nil, nil
+}
 
 type CorpusEntry = struct {
 	Parent string
