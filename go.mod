@@ -1,4 +1,4 @@
-module github.com/coocoozz/covertool
+module github.com/sangchul/covertool
 
 go 1.18
 
